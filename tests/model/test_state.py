@@ -7,7 +7,7 @@ from model.layer import Layer
 class TestState(unittest.TestCase):
     def setUp(self):
         layer = Layer(6, 11)
-        self.state = State(0, 0, layer, [], [(0, 0)], [])
+        self.state = State(layer, [])
 
     def test_consecutive_placements(self):
         # First piece (2x3)

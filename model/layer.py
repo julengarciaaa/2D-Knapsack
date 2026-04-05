@@ -25,10 +25,10 @@ class Layer:
     def get_num_pieces(self):
         return len(self.pieces)
     
-    def fill_layer_ng(self, ldp, ov, pieces, sdepth, swidth):
-        S0 = State(0, 0, pieces, [(0, 0)], [])
-        Sset = [S0]
-        Sbest_vp = 0
+    # def fill_layer_ng(self, ldp, ov, pieces, sdepth, swidth):
+    #     S0 = State(0, 0, pieces, [(0, 0)], [])
+    #     Sset = [S0]
+    #     Sbest_vp = 0
 
     #   while len(Sset) != 0:
     #       # We choose the state with the maximum number of packed pieces
