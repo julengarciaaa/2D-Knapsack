@@ -1,26 +1,24 @@
 class Piece:
-    def __init__(self, length, width, ov=None):
+    def __init__(self, length, width):
         self.length = length
         self.width = width
-        self.ov = ov
     
     def get_length(self):
-        if self.ov:
-            return self.width
-        else:
-            return self.length
+        return self.length
         
     def get_width(self):
-        if self.ov:
-            return self.length
-        else:
-            return self.width
-        
-    def set_ov(self, ov):
-        self.ov = ov
-
-    def get_ov(self):
-        return self.ov
+        return self.width
         
     def get_area(self):
         return self.length * self.width
+    
+    def __eq__(self, other):
+        if not isinstance(other, Piece):
+            return False
+        return (self.length == other.length and self.width == other.width or
+                self.length == other.width and self.width == other.length)
+    
+    def __hash__(self):
+        # We normalize dimensions.
+        dimensions = (min(self.length, self.width), max(self.length, self.width))
+        return hash(dimensions)

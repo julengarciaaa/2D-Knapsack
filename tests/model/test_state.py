@@ -1,5 +1,5 @@
 import unittest
-from model.state import State
+from model.layer_state import LayerState
 from model.piece import Piece
 from model.placement import Placement
 from model.layer import Layer
@@ -9,7 +9,7 @@ class TestState(unittest.TestCase):
         # El ancho y largo parecen estar invertidos en tu lógica previa de tests, 
         # asegúrate de que Layer(ancho, largo) coincida con tus p_points.
         layer = Layer(6, 11) 
-        self.state = State(layer, [])
+        self.state = LayerState(layer, [])
 
     def test_consecutive_placements(self):
         # First piece (2x3)

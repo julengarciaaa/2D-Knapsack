@@ -1,12 +1,12 @@
 import portion as P
 from collections import defaultdict
 
-class State:
-    def __init__(self, layer, pieces):
+class LayerState:
+    def __init__(self, layer, warehouse):
         self.num_packed = 0    # Number of packed pieces
         self.packed_value = 0    # Total area
         self.layer = layer
-        self.pieces = pieces  # Still free pieces
+        self.warehouse = warehouse  # State of the pieces' stock
         self.p_points = [(0, 0)]  # List of current active placing points
         self.placements = []    # History of placements
 
@@ -29,8 +29,8 @@ class State:
     def get_packed_value(self):
         return self.packed_value
     
-    def get_pieces(self):
-        return self.pieces
+    def get_warehouse(self):
+        return self.warehouse
     
     def get_p_points(self):
         return self.p_points
@@ -41,8 +41,8 @@ class State:
     def is_feasible(self, placement):
         x, y = placement.get_p_point()
         piece = placement.get_piece()
-        p_w = piece.get_width()
-        p_l = piece.get_length()
+        p_w = placement.get_width()
+        p_l = placement.get_length()
 
         # Boundary Check
         if x < 0 or y < 0:
@@ -56,9 +56,8 @@ class State:
         # Using AABB (Axis-Aligned Bounding Box) intersection
         for placed in self.placements:
             px, py = placed.get_p_point()
-            pp = placed.get_piece()
-            pp_w = pp.get_width()
-            pp_l = pp.get_length()
+            pp_w = placed.get_width()
+            pp_l = placed.get_length()
 
             # If these 4 conditions are met simultaneously, the rectangles overlap
             if (x < px + pp_l and
@@ -75,8 +74,8 @@ class State:
         # Extract coordinates and properties from the placement object
         x, y = placement.get_p_point()
         piece = placement.get_piece()
-        p_w = piece.get_width()
-        p_l = piece.get_length()
+        p_w = placement.get_width()
+        p_l = placement.get_length()
 
         # Create a new state instance (shallow copy)
         new_state = copy.copy(self)
@@ -122,12 +121,13 @@ class State:
         # Update state's properties
         new_state.num_packed = self.num_packed + 1
         new_state.packed_value = self.packed_value + piece.get_area()
-        # Create a new list of pieces excluding the packed one
-        new_state.pieces = self.pieces.copy()
-        for p in new_state.pieces:
-            if p.length == piece.length and p.width == piece.width:
-                new_state.pieces.remove(p)
-                break
+
+        # Create a new warehouse without the placed piece
+        new_state.warehouse = copy.deepcopy(self.warehouse)
+        new_state.warehouse.delete_piece(piece)
+
+        # Add the new placement to the layer
+        new_state.layer.add_placement(placement)
 
         new_state.p_points = new_p_points
         # Create a new list for the placement history
@@ -142,11 +142,10 @@ class State:
 
     def get_tp(self, placement):
         x, y = placement.get_p_point()
-        piece = placement.get_piece()
         
         # Piece's dimensions
-        p_w = piece.get_width()
-        p_l = piece.get_length()
+        p_w = placement.get_width()
+        p_l = placement.get_length()
 
         tp = 0
 
@@ -167,6 +166,17 @@ class State:
         tp += self.get_interval_length(contact_right)
 
         return tp
+    
+    def _get_signature(self):
+        return frozenset(self.placements)
+
+    def __eq__(self, other):
+        if not isinstance(other, LayerState):
+            return False
+        return self._get_signature() == other._get_signature()
+
+    def __hash__(self):
+        return hash(self._get_signature())
         
 
 
