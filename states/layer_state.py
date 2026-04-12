@@ -2,23 +2,29 @@ import portion as P
 from collections import defaultdict
 
 class LayerState:
-    def __init__(self, layer, warehouse):
-        self.num_packed = 0    # Number of packed pieces
-        self.packed_value = 0    # Total area
+    def __init__(self, layer, warehouse, num_packed=0, packed_value=0, p_points=None, placements=None, vertical_edges=None, horizontal_edges=None):
+        self.num_packed = num_packed    # Number of packed pieces
+        self.packed_value = packed_value    # Total area
         self.layer = layer
         self.warehouse = warehouse  # State of the pieces' stock
-        self.p_points = [(0, 0)]  # List of current active placing points
-        self.placements = []    # History of placements
+        self.p_points = list(p_points) if p_points is not None else [(0, 0)] # List of current active placing points
+        self.placements = list(placements) if placements is not None else []    # History of placements
 
         # Initialize the vertical edges' interval dictionary
-        self.vertical_edges = defaultdict(lambda: P.empty())
-        self.vertical_edges[0] = P.closedopen(0, layer.get_width())
-        self.vertical_edges[layer.get_length()] = P.closedopen(0, layer.get_width())
+        if vertical_edges is None:
+            self.vertical_edges = defaultdict(lambda: P.empty())
+            self.vertical_edges[0] = P.closedopen(0, layer.get_width())
+            self.vertical_edges[layer.get_length()] = P.closedopen(0, layer.get_width())
+        else:
+            self.vertical_edges = vertical_edges.copy()
 
         # Initialize the horizontal edges' interval dictionary
-        self.horizontal_edges = defaultdict(lambda: P.empty())
-        self.horizontal_edges[0] = P.closedopen(0, layer.get_length())
-        self.horizontal_edges[layer.get_width()] = P.closedopen(0, layer.get_length())
+        if horizontal_edges is None:
+            self.horizontal_edges = defaultdict(lambda: P.empty())
+            self.horizontal_edges[0] = P.closedopen(0, layer.get_length())
+            self.horizontal_edges[layer.get_width()] = P.closedopen(0, layer.get_length())
+        else:
+            self.horizontal_edges = horizontal_edges.copy()
 
     def get_layer(self):
         return self.layer
@@ -76,13 +82,12 @@ class LayerState:
         piece = placement.get_piece()
         p_w = placement.get_width()
         p_l = placement.get_length()
-
-        # Create a new state instance (shallow copy)
-        new_state = copy.copy(self)
         
         # Deep copy the interval dictionaries to avoid modifying the original state
-        new_state.vertical_edges = self.vertical_edges.copy()
-        new_state.horizontal_edges = self.horizontal_edges.copy()
+        new_vertical_edges = self.vertical_edges.copy()
+        new_horizontal_edges = self.horizontal_edges.copy()
+        new_layer = copy.copy(self.layer)
+        new_layer.placements = list(self.layer.placements)
         
         # Initial candidate placement points based on the new piece's corners
         p_point1 = (x, y + p_w) # Rear left point
@@ -95,12 +100,12 @@ class LayerState:
         px2, py2 = p_point2
 
         # Check the existance of vertical supports
-        p1_has_vertical_support = py1 in new_state.vertical_edges[x]
-        p2_has_vertical_support = py2 in new_state.vertical_edges[x + p_l]
+        p1_has_vertical_support = py1 in new_vertical_edges[x]
+        p2_has_vertical_support = py2 in new_vertical_edges[x + p_l]
 
         # Check the existance of horizontal supports
-        p1_has_horizontal_support = px1 in new_state.horizontal_edges[y + p_w]
-        p2_has_horizontal_support = px2 in new_state.horizontal_edges[y]
+        p1_has_horizontal_support = px1 in new_horizontal_edges[y + p_w]
+        p2_has_horizontal_support = px2 in new_horizontal_edges[y]
 
         # Check the conditions for being a rear left placement point
         if p1_has_vertical_support and not p1_has_horizontal_support and p_point1 not in new_p_points:
@@ -111,27 +116,31 @@ class LayerState:
             new_p_points.append(p_point2)
 
         # Update vertical edges by adding the new piece's edges
-        new_state.vertical_edges[x] = new_state.vertical_edges[x] | P.closedopen(y, y + p_w)
-        new_state.vertical_edges[x + p_l] = new_state.vertical_edges[x + p_l] | P.closedopen(y, y + p_w)
+        new_vertical_edges[x] = new_vertical_edges[x] | P.closedopen(y, y + p_w)
+        new_vertical_edges[x + p_l] = new_vertical_edges[x + p_l] | P.closedopen(y, y + p_w)
 
         # Update horizontal edges by adding the new piece's edges
-        new_state.horizontal_edges[y] = new_state.horizontal_edges[y] | P.closedopen(x, x + p_l)
-        new_state.horizontal_edges[y + p_w] = new_state.horizontal_edges[y + p_w] | P.closedopen(x, x + p_l)
+        new_horizontal_edges[y] = new_horizontal_edges[y] | P.closedopen(x, x + p_l)
+        new_horizontal_edges[y + p_w] = new_horizontal_edges[y + p_w] | P.closedopen(x, x + p_l)
 
         # Update state's properties
-        new_state.num_packed = self.num_packed + 1
-        new_state.packed_value = self.packed_value + piece.get_area()
-
+        new_num_packed = self.num_packed + 1
+        new_packed_value = self.packed_value + piece.get_area()
         # Create a new warehouse without the placed piece
-        new_state.warehouse = copy.deepcopy(self.warehouse)
-        new_state.warehouse.delete_piece(piece)
+        new_warehouse = copy.deepcopy(self.warehouse)
+        new_warehouse.delete_piece(piece)
+        # Update placements
+        new_layer.add_placement(placement)
+        new_placements = list(self.placements) + [placement]
 
-        # Add the new placement to the layer
-        new_state.layer.add_placement(placement)
-
-        new_state.p_points = new_p_points
-        # Create a new list for the placement history
-        new_state.placements = self.placements + [placement]
+        new_state = LayerState(new_layer, 
+                               new_warehouse, 
+                               new_num_packed, 
+                               new_packed_value, 
+                               new_p_points,
+                               new_placements, 
+                               new_vertical_edges, 
+                               new_horizontal_edges)
 
         return new_state
 

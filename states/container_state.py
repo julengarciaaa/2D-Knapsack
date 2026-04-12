@@ -1,5 +1,6 @@
 from algorithms.layer_filler_ng import LayerFillerNG
 from model.layer import Layer
+from visuals.state_visuals import plot_layer_state
 
 class ContainerState:
 
@@ -22,9 +23,8 @@ class ContainerState:
             temp_warehouse = copy.deepcopy(self.warehouse)
             
             # Create the layer we are filling 
-            length = placement.get_length()
-            width = placement.get_width()
-            layer = Layer(length, width)
+            piece_length = placement.get_length()
+            layer = Layer(piece_length, self.container.width)
         
             solution = self.layer_filler.fill_layer(layer, 
                                         placement.get_piece(), 
@@ -32,6 +32,7 @@ class ContainerState:
                                         temp_warehouse, 
                                         s_depth, 
                                         s_width)
+            
             
             if solution is not None:
                 # Create a copy of the container and add the new layer

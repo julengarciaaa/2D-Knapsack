@@ -1,5 +1,5 @@
 import unittest
-from model.layer_state import LayerState
+from states.layer_state import LayerState
 from model.piece import Piece
 from model.placement import Placement
 from model.layer import Layer

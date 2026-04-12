@@ -16,7 +16,11 @@ class Container:
         return self.layers
     
     def is_feasible_ldp(self, placement):
-        return placement.get_length() <= self.length - self.next_layer_start and placement.get_width() <= self.width
+        length = placement.get_length()
+        width = placement.get_width()
+        available_length = self.length - self.next_layer_start
+
+        return length <=available_length and width <= self.width
     
     def add_layer(self, layer):
         self.layers.append(layer)

@@ -1,4 +1,4 @@
-from model.layer_state import LayerState
+from states.layer_state import LayerState
 from model.placement import Placement
 from pprint import pprint
 
@@ -6,8 +6,10 @@ class LayerFillerNG:
 
     def fill_layer(self, layer, ldp, is_rotated, warehouse, s_depth, s_width):
         import copy
-
-        s_0 = LayerState(layer, warehouse)
+        temp_warehouse = copy.deepcopy(warehouse)
+        temp_layer = copy.deepcopy(layer)
+        
+        s_0 = LayerState(temp_layer, temp_warehouse)
         s_set = [s_0]
         visited = set()
         visited.add(s_0)

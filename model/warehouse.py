@@ -48,6 +48,13 @@ class Warehouse:
     def get_pieces(self):
         return self.idx2piece.values()
     
+    def get_num_pieces(self):
+        num = 0
+        for quantity in self.quantities.values():
+            num += quantity
+
+        return num
+    
     def print_inventory(self):
         print("--- Warehouse Inventory ---")
         if not self.quantities:

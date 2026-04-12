@@ -2,7 +2,7 @@ class Placement:
     def __init__(self, piece, is_rotated, p_point):
         self.piece = piece
         self._is_rotated = is_rotated
-        self.p_point = p_point  # Placing point
+        self.p_point = p_point
 
     def get_piece(self):
         return self.piece
