@@ -1,8 +1,10 @@
+import copy
+
 class Container:
 
-    def __init__(self, width, length):
-        self.width = width
+    def __init__(self, length, width):
         self.length = length
+        self.width = width
         self.layers = []
         self.next_layer_start = 0
 
@@ -15,9 +17,10 @@ class Container:
     def get_layers(self):
         return self.layers
     
-    def is_feasible_ldp(self, placement):
+    def is_feasible_ldp(self, placement): # LDP = Layer Defining Placement
         length = placement.get_length()
         width = placement.get_width()
+        # Calculate the available length for commiting a placement
         available_length = self.length - self.next_layer_start
 
         return length <=available_length and width <= self.width
@@ -42,12 +45,16 @@ class Container:
 
         return covered_area / area
     
+    def clone(self):
+        new_container = copy.copy(self)
+        new_container.layers = list(self.layers)
+
+        return new_container
+    
     def __eq__(self, other):
         if not isinstance(other, Container):
             return False
         
-        # We do not care if the layers are in different order
-        # but they have the same pieces.
         return (self.length == other.length and
                 self.width == other.width and
                 set(self.layers) == set(other.layers))

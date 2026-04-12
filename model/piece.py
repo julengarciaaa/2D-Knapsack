@@ -1,3 +1,5 @@
+import copy
+
 class Piece:
     def __init__(self, length, width):
         self.length = length
@@ -12,6 +14,10 @@ class Piece:
     def get_area(self):
         return self.length * self.width
     
+    def clone(self):
+        new_piece = copy.copy(self)
+        return new_piece
+    
     def __eq__(self, other):
         if not isinstance(other, Piece):
             return False
@@ -19,6 +25,5 @@ class Piece:
                 self.length == other.width and self.width == other.length)
     
     def __hash__(self):
-        # We normalize dimensions.
         dimensions = (min(self.length, self.width), max(self.length, self.width))
         return hash(dimensions)

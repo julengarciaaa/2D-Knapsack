@@ -2,9 +2,9 @@ import portion as P
 from collections import defaultdict
 
 class LayerState:
-    def __init__(self, layer, warehouse, num_packed=0, packed_value=0, p_points=None, vertical_edges=None, horizontal_edges=None):
-        self.num_packed = num_packed    # Number of packed pieces
-        self.packed_value = packed_value    # Total area
+    def __init__(self, layer, warehouse, num_placements=0, covered_area=0, p_points=None, vertical_edges=None, horizontal_edges=None):
+        self.num_placements = num_placements
+        self.covered_area = covered_area
         self.layer = layer
         self.warehouse = warehouse  # State of the pieces' stock
         self.p_points = list(p_points) if p_points is not None else [(0, 0)] # List of current active placing points
@@ -30,10 +30,10 @@ class LayerState:
         return self.layer
     
     def get_num_packed(self):
-        return self.num_packed
+        return self.num_placements
     
     def get_packed_value(self):
-        return self.packed_value
+        return self.covered_area
     
     def get_warehouse(self):
         return self.warehouse
@@ -124,8 +124,8 @@ class LayerState:
         new_horizontal_edges[y + p_w] = new_horizontal_edges[y + p_w] | P.closedopen(x, x + p_l)
 
         # Update state's properties
-        new_num_packed = self.num_packed + 1
-        new_packed_value = self.packed_value + piece.get_area()
+        new_num_packed = self.num_placements + 1
+        new_packed_value = self.covered_area + piece.get_area()
         # Create a new warehouse without the placed piece
         new_warehouse = copy.deepcopy(self.warehouse)
         new_warehouse.delete_piece(piece)

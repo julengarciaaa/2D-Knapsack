@@ -1,8 +1,10 @@
+import copy
+
 class Placement:
-    def __init__(self, piece, is_rotated, p_point):
+    def __init__(self, piece, p_point, is_rotated):
         self.piece = piece
-        self._is_rotated = is_rotated
         self.p_point = p_point
+        self._is_rotated = is_rotated
 
     def get_piece(self):
         return self.piece
@@ -24,9 +26,12 @@ class Placement:
         
     def is_rotated(self):
         return self._is_rotated
+    
+    def clone(self):
+        new_placement = copy.copy(self)
+        new_placement.piece = self.piece
 
     def __eq__(self, other):
-        # 2 placements are the same if they consist of the same piece, same rotation and same placemente point.
         if not isinstance(other, Placement):
             return False
         return (self.piece == other.piece and 
