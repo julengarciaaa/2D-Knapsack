@@ -1,76 +1,68 @@
-from states.layer_state import LayerState
 from model.placement import Placement
-from pprint import pprint
+from states.layer_state import LayerState
+from visuals.state_visuals import plot_layer_state
 
 class LayerFillerNG:
+    def __init__(self, s_depth, s_width):
+        self.s_depth = s_depth
+        self.s_width = s_width
 
-    def fill_layer(self, layer, ldp, is_rotated, warehouse, s_depth, s_width):
-        import copy
-        temp_warehouse = copy.deepcopy(warehouse)
-        temp_layer = copy.deepcopy(layer)
+    def fill_layer(self, layer, ldp, warehouse):
+        # Starting state with the Layer Defining Placement (LDP)
+        s_0 = LayerState(layer, warehouse)
+        s_1 = s_0.commit_placement(ldp)
         
-        s_0 = LayerState(temp_layer, temp_warehouse)
-        s_set = [s_0]
-        visited = set()
-        visited.add(s_0)
+        if s_1 is None: # Safety check
+            return None
+
+        s_set = [s_1]
+        visited = {s_1}
 
         s_best_vp = 0
-        s_best = None
+        s_best = s_1
 
-        while len(s_set) != 0:
+        while s_set:
             s = s_set.pop()
+            
+            # Generate candidates
+            candidate_successors = []
+            free_pieces = s.get_warehouse().get_pieces()
+            p_points = s.get_p_points()
 
-            if s == s_0:
-                pl = Placement(ldp, is_rotated, (0, 0))
-                if s.is_feasible(pl):
-                    s_1 = s.commit_placement(pl)
-                    s_set.append(s_1)
-                else:
-                    return None
+            for p in free_pieces:
+                is_square = (p.length == p.width)
+                for p_point in p_points:
+                    # Try both orientations
+                    orientations = [False] if is_square else [False, True]
+                    
+                    for rot in orientations:
+                        pl = Placement(p, rot, p_point)
+
+                        if s.layer.is_feasible(pl):
+                            # Touching Perimeter (TP) is our heuristic
+                            candidate_successors.append((pl, s.get_tp(pl)))
+
+            # Continue searching or save best result
+            if not candidate_successors:
+                current_value = s.layer.get_covered_area()
+                if current_value > s_best_vp:
+                    s_best_vp = current_value
+                    s_best = s
             else:
-                candidate_successors = []
-                free_pieces = s.get_warehouse().get_pieces()
-                p_points = s.get_p_points()
+                # Beam width logic
+                n_succ = self.s_width if s.layer.get_num_placements() <= self.s_depth else 1
 
-                for p in free_pieces:
-                    is_square = (p.length == p.width)
-                    
-                    for p_point in p_points:
-                        # Non-rotated piece
-                        pl2 = Placement(p, False, p_point)
-                        if s.is_feasible(pl2):
-                            candidate_successors.append((pl2, s.get_tp(pl2)))
-
-                        # Rotated piece, only if it is not a square
-                        if not is_square:
-                            pl1 = Placement(p, True, p_point)
-                            if s.is_feasible(pl1):
-                                candidate_successors.append((pl1, s.get_tp(pl1)))
+                # Sort candidates by TP (Heuristic)
+                candidate_successors.sort(key=lambda x: x[1])
                 
-                if len(candidate_successors) == 0:
-                    if s.get_packed_value() > s_best_vp:
-                        s_best_vp = s.get_packed_value()
-                        s_best = s
-                else:
-                    if s.get_num_packed() <= s_depth:
-                        n_succ = s_width
-                    else:
-                        n_succ = 1
-
-                    # Sort the candidate placements based on the touching perimeter
-                    candidate_successors.sort(key=lambda x: x[1], reverse=False)
+                # Take the best n_succ (highest TP)
+                best_candidates = candidate_successors[-n_succ:]
+                
+                for pl, _ in best_candidates:
+                    s_next = s.commit_placement(pl)
                     
-                    # Choose the n_succ placements with the highest touching perimeter
-                    best_successors = candidate_successors[-n_succ:]
-                    
-                    # Commit the placements and create the new states
-                    for pl, _ in best_successors:
-                        s_next = s.commit_placement(pl)
-
-                        # We only add the new state if it is not visited yet
-                        if s_next not in visited:
-                            visited.add(s_next)
-                            s_set.append(s_next)
+                    if s_next not in visited:
+                        visited.add(s_next)
+                        s_set.append(s_next)
 
         return s_best
-

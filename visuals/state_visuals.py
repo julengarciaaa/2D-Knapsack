@@ -18,7 +18,7 @@ def plot_layer_state(state):
     ax.set_aspect('equal')
 
     # 2. Dibujar las piezas colocadas
-    placements = state.get_placements()
+    placements = state.get_layer().get_placements()
     colores = plt.cm.get_cmap('Pastel1', max(len(placements), 1))
 
     for i, placement in enumerate(placements):
@@ -55,7 +55,7 @@ def plot_layer_state(state):
 
     # 5. Título e información
     area_total = layer_l * layer_w
-    plt.title(f"Covered area: {state.get_packed_value()} / {area_total} ({state.get_num_packed()} pieces)")
+    plt.title(f"Covered area: {state.get_layer().get_covered_area()} / {area_total} ({state.get_layer().get_num_placements()} pieces)")
     plt.xlabel("Length (X) - Red dots: Active P-Points")
     plt.ylabel("Width (Y)")
     

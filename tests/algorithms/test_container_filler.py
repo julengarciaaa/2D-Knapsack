@@ -7,27 +7,25 @@ from visuals.state_visuals import plot_container_state
 # Container configuration (Dimensions: 20x30)
 container = Container(width=20, length=30)
 
-# Initialize Warehouse with diverse stock
-warehouse = Warehouse()
+# Create the initial inventory dictionary
+inventory_data = {
+    Piece(5, 2): 10,
+    Piece(3, 2): 10,
+    Piece(7, 2): 10,
+    Piece(4, 3): 10,
+    Piece(6, 3): 10,
+    Piece(2, 2): 10,
+    
+    # Large base pieces for layer structure
+    Piece(10, 4): 3
+}
 
-# Pieces designed to complement dimensions (summing to 10)
-for _ in range(10):
-    warehouse.add_piece(Piece(5, 2))  # (5+5) fills the width
-    warehouse.add_piece(Piece(3, 2))  
-    warehouse.add_piece(Piece(7, 2))  # (3+7) fills the width
-    warehouse.add_piece(Piece(4, 3))
-    warehouse.add_piece(Piece(6, 3))  # (4+6) fills the width
-    warehouse.add_piece(Piece(2, 2))  # Small fillers
-
-# Large base pieces for layer structure
-for _ in range(3):
-    warehouse.add_piece(Piece(10, 4)) 
-
+warehouse = Warehouse(inventory_data)
 # Configure Filler
-filler = ContainerFiller(n1=2, n2=1, s_depth=2, s_width=3)
+filler = ContainerFiller(n1=4, n2=3, s_depth=2, s_width=3)
 
 # Execute the multi-layer filling algorithm
-best_state = filler.fill_container(container, warehouse, n1=5, n2=3)
+best_state = filler.fill_container(container, warehouse)
 
 # Result analysis and visualization
 if best_state is not None:

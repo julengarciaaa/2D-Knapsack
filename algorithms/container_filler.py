@@ -5,7 +5,6 @@ from algorithms.layer_filler_ng import LayerFillerNG
 from visuals.state_visuals import plot_layer_state
 
 class ContainerFiller:
-
     def __init__(self, n1, n2, s_depth, s_width):
         self.n1 = n1
         self.n2 = n2
@@ -13,100 +12,74 @@ class ContainerFiller:
         self.s_width = s_width
 
     def get_best_ldps(self, container, warehouse, n):
-        # Get pieces and sort them by area in descending order
+        # Sort by area to prioritize large "base" pieces
         pieces = sorted(warehouse.get_pieces(), key=lambda p: p.get_area(), reverse=True)
         best_ldps = []
 
         for piece in pieces:
-            # Check both orientations unless the piece is a square
-            orientations = [False, True]
-            if piece.width == piece.length:
-                orientations = [False]
+            # Skip if we don't even have 1 unit left
+            if warehouse.inventory.get(piece, 0) <= 0:
+                continue
 
+            orientations = [False] if piece.width == piece.length else [False, True]
             for is_rotated in orientations:
-                # Create a placement at the origin (0,0)
                 pl = Placement(piece, is_rotated, (0, 0))
-
-                # Check if this placement is valid for the current container
                 if container.is_feasible_ldp(pl):
                     best_ldps.append(pl)
-                    n -= 1
-                    
-                    # Stop once we have reached the required number of candidates
-                    if n <= 0:
+                    if len(best_ldps) >= n:
                         return best_ldps
-
         return best_ldps
 
+    def _fill_container(self, container, initial_ldp, initial_warehouse):
+        # Create initial state with the first chosen LDP
+        s_start = ContainerState(container, initial_warehouse, self.s_depth, self.s_width)
+        s_0 = s_start.fill_layer(initial_ldp)
+
+        if s_0 is None: return None
+        
+        s_best = s_0
+        s_best_fr = s_0.get_container().get_filling_rate()
+        s_set = [s_0]
+        visited = {s_0}
             
-         
+        while s_set:
+            s = s_set.pop()
 
-    def fill_container(self, container, warehouse, n1, n2):
-        import copy
-        temp_container = copy.deepcopy(container)
-        temp_warehouse = copy.deepcopy(warehouse)
+            current_warehouse = s.get_warehouse()
+            current_container = s.get_container()
+            
+            best_ldps = self.get_best_ldps(current_container, current_warehouse, self.n2)
 
-        best_initial_ldps = self.get_best_ldps(temp_container, temp_warehouse, n1)
-
-        s_best_fr = 0
-        s_best = None
-
-        for initial_ldp in best_initial_ldps:
-            # Initialize the state
-            s_0 = ContainerState(temp_container, temp_warehouse)
-            # Fill the layer
-            s_0 = s_0.fill_layer(initial_ldp, self.s_depth, self.s_width)
-            s_set = []
-            if s_0 is not None:
-                s_set = [s_0]
-                visited = set()
-                visited.add(s_0)
-            else:
-                s_fr = s.get_container().get_filling_rate()
-                if s_fr > s_best_fr:
-                    s_best_fr = s_fr
+            if not best_ldps:
+                # Leaf node: check if it's the best container overall
+                fr = current_container.get_filling_rate()
+                if fr > s_best_fr:
                     s_best = s
-
-            while len(s_set) != 0:
-                s = s_set.pop()
-                inter_container = s.get_container()
-                inter_warehouse = s.get_warehouse()
-
-                # Obtain the best layer defining placements
-                best_ldps = self.get_best_ldps(inter_container, inter_warehouse, n2)
-
-                if len(best_ldps) == 0:
-                    s_fr = s.get_container().get_filling_rate()
-                    if s_fr > s_best_fr:
-                        s_best_fr = s_fr
-                        s_best = s
-
-                for best_ldp in best_ldps:
-                    s_next = s.fill_layer(best_ldp, self.s_depth, self.s_width)
+                    s_best_fr = fr
+            else:
+                for ldp in best_ldps:
+                    s_next = s.fill_layer(ldp)
+                    
                     if s_next is not None and s_next not in visited:
                         visited.add(s_next)
                         s_set.append(s_next)
+        return s_best 
+         
+    def fill_container(self, container, warehouse):
+        # Obtain the best layer defining placements
+        best_ldps = self.get_best_ldps(container, warehouse, self.n1)
 
-        
+        s_best = None
+        s_best_fr = 0
+
+        for best_ldp in best_ldps:
+            s = self._fill_container(container, best_ldp, warehouse)
+
+            if s is not None and s.get_container().get_filling_rate() > s_best_fr:
+                s_best = s
+                s_best_fr = s.get_container().get_filling_rate()
+ 
         return s_best 
 
 
 
-
-                
-
-
-        
-
-
-
-
-
-
-
-
-
-
-
-
-        return None
