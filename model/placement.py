@@ -1,4 +1,5 @@
 import copy
+from model.piece import Piece
 
 class Placement:
     __slots__ = ['piece', 'p_point', '_is_rotated']
@@ -25,6 +26,21 @@ class Placement:
     
     def clone(self):
         return copy.copy(self)
+    
+    def placement_to_dict(pl):
+        return {
+            "piece": Piece.piece_to_dict(pl.piece),
+            "p_point": tuple(pl.p_point),
+            "is_rotated": pl._is_rotated
+        }
+    
+    def placement_from_dict(d):
+        piece = Piece.piece_from_dict(d["piece"])
+        p_point = tuple(d["p_point"])
+        is_rotated = d["is_rotated"]
+        return Placement(piece, is_rotated, p_point)
+
+
 
     def __eq__(self, other):
         if not isinstance(other, Placement):

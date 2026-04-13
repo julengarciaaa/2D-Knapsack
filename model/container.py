@@ -1,4 +1,5 @@
 import copy
+from model.layer import Layer
 
 class Container:
     __slots__ = ['length', 'width', 'current_length', 'layers', '_cached_hash']
@@ -52,6 +53,25 @@ class Container:
             current_length=new_current_length, 
             layers=new_layers
         )
+    
+    def container_to_dict(container):
+        return {
+            "length": container.length,
+            "width": container.width,
+            "current_length": container.current_length,
+            "layers": [Layer.layer_to_dict(layer) for layer in container.layers]
+        }
+
+    def container_from_dict(d):
+        layers = tuple(Layer.layer_from_dict(x) for x in d["layers"])
+        return Container(
+            length=d["length"],
+            width=d["width"],
+            current_length=d["current_length"],
+            layers=layers
+        )
+
+
 
     def __eq__(self, other):
         if not isinstance(other, Container):

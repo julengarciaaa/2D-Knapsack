@@ -1,4 +1,5 @@
 import copy
+from model.placement import Placement
 
 class Layer:
     __slots__ = ['length', 'width', 'placements']
@@ -61,6 +62,22 @@ class Layer:
                 return False 
 
         return True
+    
+    def layer_to_dict(layer):
+        return {
+            "length": layer.length,
+            "width": layer.width,
+            "placements": [Placement.placement_to_dict(p) for p in layer.placements]
+        }
+
+    def layer_from_dict(d):
+        placements = tuple(Placement.placement_from_dict(p) for p in d["placements"])
+        return Layer(
+            length=d["length"],
+            width=d["width"],
+            placements=placements
+        )
+
 
     def __eq__(self, other):
         if not isinstance(other, Layer):

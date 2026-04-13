@@ -1,3 +1,5 @@
+from model.piece import Piece
+
 class Warehouse:
     __slots__ = ['inventory', '_cached_hash']
 
@@ -29,6 +31,24 @@ class Warehouse:
             del new_inventory[piece]
             
         return Warehouse(new_inventory)
+    
+    def warehouse_to_dict(warehouse):
+        return {
+            "inventory": [
+                {"piece": Piece.piece_to_dict(piece), "qty": qty}
+                for piece, qty in warehouse.inventory.items()
+            ]
+        }
+
+    def warehouse_from_dict(d):
+        inventory = {}
+        for entry in d["inventory"]:
+            piece = Piece.piece_from_dict(entry["piece"])
+            qty = entry["qty"]
+            inventory[piece] = qty
+        return Warehouse(inventory)
+
+
 
     def __eq__(self, other):
         if not isinstance(other, Warehouse):

@@ -19,6 +19,19 @@ class Piece:
     def clone(self):
         return copy.copy(self)
     
+    def piece_to_dict(piece):
+        return {
+            "length": piece.length,
+            "width": piece.width
+        }
+
+    def piece_from_dict(d):
+        return Piece(
+            length=d["length"],
+            width=d["width"]
+        )
+
+    
     def __eq__(self, other):
         if not isinstance(other, Piece):
             return False

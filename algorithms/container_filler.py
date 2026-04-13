@@ -1,8 +1,21 @@
 from states.container_state import ContainerState
 from model.layer import Layer
 from model.placement import Placement
-from algorithms.layer_filler_ng import LayerFillerNG
-from visuals.state_visuals import plot_layer_state
+from model.container import Container
+from model.warehouse import Warehouse
+from concurrent.futures import ProcessPoolExecutor
+from itertools import repeat
+
+def worker(args):
+    container_dict, placement_dict, warehouse_dict, params = args
+
+    container = Container.container_from_dict(container_dict)
+    placement = Placement.placement_from_dict(placement_dict)
+    warehouse = Warehouse.warehouse_from_dict(warehouse_dict)
+
+    filler = ContainerFiller(*params)
+
+    return filler._fill_container(container, placement, warehouse)
 
 class ContainerFiller:
     def __init__(self, n1, n2, s_depth, s_width):
@@ -64,22 +77,36 @@ class ContainerFiller:
                         visited.add(s_next)
                         s_set.append(s_next)
         return s_best 
-         
+
     def fill_container(self, container, warehouse):
-        # Obtain the best layer defining placements
-        best_ldps = self.get_best_ldps(container, warehouse, self.n1)
+        placements = self.get_best_ldps(container, warehouse, self.n1)
+
+        container_dict = Container.container_to_dict(container)
+        warehouse_dict = Warehouse.warehouse_to_dict(warehouse)
+        placement_dicts = [Placement.placement_to_dict(pl) for pl in placements]
+
+        params = (self.n1, self.n2, self.s_depth, self.s_width)
+
+        args = [
+            (container_dict, pl_dict, warehouse_dict, params)
+            for pl_dict in placement_dicts
+        ]
+
+        with ProcessPoolExecutor() as executor:
+            results = executor.map(worker, args)
 
         s_best = None
         s_best_fr = 0
 
-        for best_ldp in best_ldps:
-            s = self._fill_container(container, best_ldp, warehouse)
+        for s in results:
+            if s is not None:
+                fr = s.get_container().get_filling_rate()
+                if fr > s_best_fr:
+                    s_best = s
+                    s_best_fr = fr
 
-            if s is not None and s.get_container().get_filling_rate() > s_best_fr:
-                s_best = s
-                s_best_fr = s.get_container().get_filling_rate()
- 
-        return s_best 
+        return s_best
+
 
 
 
