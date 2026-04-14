@@ -20,9 +20,9 @@ def main():
 
     warehouse = Warehouse(inventory_data)
 
-    filler = ContainerFiller(n1=4, n2=3, s_depth=2, s_width=3)
+    filler = ContainerFiller(n1=10, n2=3, s_depth=2, s_width=3)
 
-    best_state = filler.fill_container(container, warehouse)
+    best_state = filler.fill_container(container, warehouse)[0]
 
     if best_state is not None:
         final_container = best_state.get_container()

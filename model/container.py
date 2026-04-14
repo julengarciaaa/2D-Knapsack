@@ -42,6 +42,15 @@ class Container:
         available_length = self.length - self.current_length
         return p_length <= available_length and p_width <= self.width
     
+    def can_add_layer(self, layer):
+        length = layer.get_length()
+
+        available_length = self.length - self.current_length
+        return length <= available_length
+    
+    def get_available_length(self):
+        return self.length - self.current_length
+    
     def add_layer(self, layer):
         new_layers = self.layers + (layer,)
         # Each layer adds its length to the container's occupied length

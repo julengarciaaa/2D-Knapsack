@@ -10,6 +10,9 @@ class Warehouse:
     def get_pieces(self):
         return self.inventory.keys()
     
+    def get_quantity(self, piece):
+        return self.inventory.get(piece, 0)
+    
     def get_num_pieces(self):
         return sum(self.inventory.values())
 
@@ -31,6 +34,23 @@ class Warehouse:
             del new_inventory[piece]
             
         return Warehouse(new_inventory)
+    
+    def warehouse_from_placements(placements):
+        inventory = {}
+        for pl in placements:
+            piece = pl.get_piece()
+            inventory[piece] = inventory.get(piece, 0) + 1
+
+        return Warehouse(inventory)
+
+    def contains(self, warehouse):
+        pieces = warehouse.get_pieces()
+
+        for piece in pieces:
+            if warehouse.get_quantity(piece) > self.get_quantity(piece):
+                return False
+            
+        return True
     
     def warehouse_to_dict(warehouse):
         return {

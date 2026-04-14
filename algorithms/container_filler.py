@@ -7,7 +7,7 @@ from concurrent.futures import ProcessPoolExecutor
 from itertools import repeat
 
 def worker(args):
-    container_dict, placement_dict, warehouse_dict, params = args
+    container_dict, placement_dict, warehouse_dict, n_solutions, params = args
 
     container = Container.container_from_dict(container_dict)
     placement = Placement.placement_from_dict(placement_dict)
@@ -15,7 +15,7 @@ def worker(args):
 
     filler = ContainerFiller(*params)
 
-    return filler._fill_container(container, placement, warehouse)
+    return filler._fill_container(container, placement, warehouse, n_solutions)
 
 class ContainerFiller:
     def __init__(self, n1, n2, s_depth, s_width):
@@ -43,14 +43,14 @@ class ContainerFiller:
                         return best_ldps
         return best_ldps
 
-    def _fill_container(self, container, initial_ldp, initial_warehouse):
+    def _fill_container(self, container, initial_ldp, warehouse, n_solutions=1):
         # Create initial state with the first chosen LDP
-        s_start = ContainerState(container, initial_warehouse, self.s_depth, self.s_width)
+        s_start = ContainerState(container, warehouse, self.s_depth, self.s_width)
         s_0 = s_start.fill_layer(initial_ldp)
 
         if s_0 is None: return None
         
-        s_best = s_0
+        solutions = []
         s_best_fr = s_0.get_container().get_filling_rate()
         s_set = [s_0]
         visited = {s_0}
@@ -62,13 +62,10 @@ class ContainerFiller:
             current_container = s.get_container()
             
             best_ldps = self.get_best_ldps(current_container, current_warehouse, self.n2)
-
+            
+            # Leaf node
             if not best_ldps:
-                # Leaf node: check if it's the best container overall
-                fr = current_container.get_filling_rate()
-                if fr > s_best_fr:
-                    s_best = s
-                    s_best_fr = fr
+                solutions.append(s)
             else:
                 for ldp in best_ldps:
                     s_next = s.fill_layer(ldp)
@@ -76,9 +73,12 @@ class ContainerFiller:
                     if s_next is not None and s_next not in visited:
                         visited.add(s_next)
                         s_set.append(s_next)
-        return s_best 
 
-    def fill_container(self, container, warehouse):
+        
+        solutions.sort(key=lambda x: x.get_container().get_filling_rate(), reverse=True)
+        return solutions[:max(1, n_solutions)]
+
+    def fill_container(self, container, warehouse, n_solutions=1):
         placements = self.get_best_ldps(container, warehouse, self.n1)
 
         container_dict = Container.container_to_dict(container)
@@ -88,24 +88,18 @@ class ContainerFiller:
         params = (self.n1, self.n2, self.s_depth, self.s_width)
 
         args = [
-            (container_dict, pl_dict, warehouse_dict, params)
+            (container_dict, pl_dict, warehouse_dict, n_solutions, params)
             for pl_dict in placement_dicts
         ]
 
         with ProcessPoolExecutor() as executor:
             results = executor.map(worker, args)
 
-        s_best = None
-        s_best_fr = 0
+        solutions = [ContainerState(container, warehouse, self.s_depth, self.s_width)]
+        solutions.extend([solution for result in results for solution in result])
+        solutions.sort(key=lambda x: x.get_container().get_filling_rate(), reverse=True)
 
-        for s in results:
-            if s is not None:
-                fr = s.get_container().get_filling_rate()
-                if fr > s_best_fr:
-                    s_best = s
-                    s_best_fr = fr
-
-        return s_best
+        return solutions[:max(1, n_solutions)]
 
 
 

@@ -1,5 +1,6 @@
 from algorithms.layer_filler_ng import LayerFillerNG
 from model.layer import Layer
+from model.warehouse import Warehouse
 
 class ContainerState:
     __slots__ = ['container', 'warehouse', 'layer_filler', '_cached_hash']
@@ -48,6 +49,24 @@ class ContainerState:
             )
             
         return None
+    
+    def add_layer(self, layer):
+        new_container = self.container.add_layer(layer)
+        new_warehouse = Warehouse()
+        for placement in layer.get_placements():
+            new_warehouse = new_warehouse.delete_piece(placement.get_piece())
+
+        return ContainerState(
+            new_container, 
+            new_warehouse, 
+            s_depth=self.layer_filler.s_depth, 
+            s_width=self.layer_filler.s_width
+        )
+    
+    def can_add_layer(self, layer):
+        layer_warehouse = Warehouse.warehouse_from_placements(layer.get_placements())
+
+        return self.container.can_add_layer(layer) and self.warehouse.contains(layer_warehouse)
         
     def __eq__(self, other):
         if not isinstance(other, ContainerState):
