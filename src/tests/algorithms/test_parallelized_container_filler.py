@@ -2,11 +2,11 @@ import time
 from model.container import Container
 from model.piece import Piece
 from model.warehouse import Warehouse
-from algorithms.container_filler import ContainerFiller
+from algorithms.container_filler_dts import ContainerFillerDTS
 
 def run_test(n1_value, container, warehouse):
     print(f"\n--- Testing with n1 = {n1_value} ---")
-    filler = ContainerFiller(n1=n1_value, n2=3, s_depth=2, s_width=3)
+    filler = ContainerFillerDTS(n1=n1_value, n2=3, s_depth=2, s_width=3)
     
     start_time = time.time()
     best_state = filler.fill_container(container, warehouse)[0]

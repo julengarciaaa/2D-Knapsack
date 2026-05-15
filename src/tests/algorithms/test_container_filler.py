@@ -1,7 +1,7 @@
 from model.container import Container
 from model.piece import Piece
 from model.warehouse import Warehouse
-from algorithms.container_filler import ContainerFiller
+from algorithms.container_filler_dts import ContainerFillerDTS
 from visuals.state_visuals import plot_container_state
 
 def main():
@@ -20,7 +20,7 @@ def main():
 
     warehouse = Warehouse(inventory_data)
 
-    filler = ContainerFiller(n1=10, n2=3, s_depth=2, s_width=3)
+    filler = ContainerFillerDTS(n1=10, n2=3, s_depth=2, s_width=3)
 
     best_state = filler.fill_container(container, warehouse)[0]
 

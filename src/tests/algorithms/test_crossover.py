@@ -1,4 +1,4 @@
-from algorithms.solver import Solver
+from algorithms.solver_dts import Solver
 from model.piece import Piece
 from model.warehouse import Warehouse
 from model.container import Container

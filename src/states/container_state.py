@@ -5,10 +5,10 @@ from src.model.warehouse import Warehouse
 class ContainerState:
     __slots__ = ['container', 'warehouse', 'layer_filler', '_cached_hash']
 
-    def __init__(self, container, warehouse, s_depth=3, s_width=3):
+    def __init__(self, container, warehouse, layer_filler):
         self.container = container
         self.warehouse = warehouse
-        self.layer_filler = LayerFillerNG(s_depth=s_depth, s_width=s_width)
+        self.layer_filler = layer_filler
 
         self._cached_hash = hash((self.container, self.warehouse))
 
@@ -44,8 +44,7 @@ class ContainerState:
             return ContainerState(
                 new_container, 
                 new_warehouse, 
-                s_depth=self.layer_filler.s_depth, 
-                s_width=self.layer_filler.s_width
+                self.layer_filler
             )
             
         return None
