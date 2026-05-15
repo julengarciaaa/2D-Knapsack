@@ -49,7 +49,6 @@ def main():
                     name_csv = str(i) + "_" + str(p[0]) + "_" + str(p[1]) + "_" + str(n_pop) + ".csv"
                     results_path = "results/demand/rts/" + name_path + "/" + name_csv
                     df_log.to_csv(results_path, index=False)
-                    plot_container_state(solution)
         
 
 if __name__ == "__main__":
