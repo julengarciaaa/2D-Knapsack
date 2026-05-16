@@ -215,9 +215,6 @@ class SolverRTS:
             # Update the statistics
             record = self.stats.compile(pop)
             self.logbook.record(gen=g, nevals=len(pop), time_gen=duration_gen, **record)
-            if g == 0:
-                print(self.logbook.header)
-            print(self.logbook.stream)
 
             df_log = pd.DataFrame(self.logbook)
             

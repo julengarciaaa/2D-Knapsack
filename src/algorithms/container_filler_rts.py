@@ -9,17 +9,6 @@ import heapq
 from src.visuals.state_visuals import plot_container_state
 import numpy as np
 
-def worker(args):
-    container_dict, placement_dict, warehouse_dict, n_solutions, params = args
-
-    container = Container.container_from_dict(container_dict)
-    placement = Placement.placement_from_dict(placement_dict)
-    warehouse = Warehouse.warehouse_from_dict(warehouse_dict)
-
-    filler = ContainerFillerRTS(*params)
-
-    return filler._fill_container(container, placement, warehouse, n_solutions)
-
 class ContainerFillerRTS:
     def __init__(self, n1, n2, layer_filler):
         self.n1 = n1
@@ -85,20 +74,11 @@ class ContainerFillerRTS:
 
     def fill_container(self, container, warehouse, n_solutions=1):
         placements = self.choose_random_ldp(container, warehouse, self.n1)
-
-        container_dict = Container.container_to_dict(container)
-        warehouse_dict = Warehouse.warehouse_to_dict(warehouse)
-        placement_dicts = [Placement.placement_to_dict(pl) for pl in placements]
-
-        params = (self.n1, self.n2, self.layer_filler)
-
-        args = [
-            (container_dict, pl_dict, warehouse_dict, n_solutions, params)
-            for pl_dict in placement_dicts
-        ]
-
-        with ProcessPoolExecutor() as executor:
-            results = executor.map(worker, args)
+        
+        results = []
+        for pl in placements:
+            result = self._fill_container(container, pl, warehouse, n_solutions)
+            results.append(result)
 
         solutions = [ContainerState(container, warehouse, self.layer_filler)]
         solutions.extend([solution for result in results for solution in result])
