@@ -79,7 +79,7 @@ def main():
                         tasks.append(task_params)
 
                     # Execute in parallel
-                    with multiprocessing.Pool(processes=num_cores) as pool:
+                    with multiprocessing.Pool(processes=min(30,num_cores)) as pool:
                         results = pool.map(worker, tasks)
 
                     list_of_logs = [result[1] for result in results]
