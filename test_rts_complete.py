@@ -52,7 +52,7 @@ def main():
         for i in range(1, 6):
             data_path = f"{set_path}{i}.json"
 
-            heuristic_parameters = [(1, 1)]
+            heuristic_parameters = [(1, 1), (2, 3)]
             n_pops = [10, 20, 30]
 
             warehouse = load_warehouse_from_json(data_path)
