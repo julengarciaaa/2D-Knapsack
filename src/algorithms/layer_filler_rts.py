@@ -32,7 +32,6 @@ class LayerFillerRTS:
 
         while s_set:
             s = s_set.pop()
-            
             # Generate candidates
             candidate_successors = []
             free_pieces = s.get_warehouse().get_pieces()

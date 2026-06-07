@@ -21,6 +21,9 @@ class Placement:
     def get_length(self):
         return self.piece.get_width() if self._is_rotated else self.piece.get_length()
         
+    def get_area(self):
+        return self.get_length() * self.get_width()
+
     def is_rotated(self):
         return self._is_rotated
     

@@ -4,19 +4,28 @@ import copy
 class Warehouse:
     __slots__ = ['original_inventory', 'inventory', '_cached_hash']
 
-    def __init__(self, inventory=None, original_inventory=None):
-        self.inventory = inventory.copy() if inventory is not None else {}
-        self.original_inventory = original_inventory.copy() if original_inventory is not None else inventory.copy() if inventory is not None else {}
+    def __init__(self, inventory, original_inventory):
+        self.inventory = inventory.copy()
+        self.original_inventory = original_inventory.copy() 
         self._cached_hash = hash(frozenset(self.inventory.items()))
 
     def get_pieces(self):
         return self.inventory.keys()
     
+    def get_original_pieces(self):
+        return self.original_inventory.keys()
+    
+    def get_min_demand(self, piece):
+        return self.inventory.get(piece)[0]
+    
     def get_max_demand(self, piece):
         return self.inventory.get(piece)[1]
     
-    def get_demand(self, piece):
-        return self.inventory.get(piece)[0]
+    def get_max_value_density(self):
+        pieces = self.get_original_pieces()
+        best_piece = max(pieces, key=lambda p : p.get_packed_value() / p.get_area())
+
+        return best_piece.get_packed_value() / best_piece.get_area()
 
     def delete_piece(self, piece):
         if piece not in self.inventory:

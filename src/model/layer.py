@@ -26,11 +26,11 @@ class Layer:
     
     def get_filling_rate(self):
         total_area = self.get_area()
-        packed_value = self.get_packed_value()
+        covered_area = self.get_covered_area()
 
         if total_area == 0 or not self.placements:
             return 0
-        return packed_value / total_area
+        return covered_area / total_area
     
     def get_packed_value(self):
         packed_value = 0

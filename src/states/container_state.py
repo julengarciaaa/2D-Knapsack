@@ -1,4 +1,3 @@
-from src.algorithms.layer_filler_ng import LayerFillerNG
 from src.model.layer import Layer
 from src.model.warehouse import Warehouse
 
@@ -18,19 +17,19 @@ class ContainerState:
     def get_warehouse(self):
         return self.warehouse
 
-    def fill_layer(self, placement):
+    def fill_layer(self, ldp):
         # Check if the piece fits in the remaining container length
-        if not self.container.is_feasible_ldp(placement):
+        if not self.container.is_feasible_ldp(ldp):
             return None
 
         # Prepare the environment for the new layer
-        layer_length = placement.get_length()
-        layer_area_template = Layer(layer_length, self.container.width)
+        layer_length = ldp.get_length()
+        layer = Layer(layer_length, self.container.width)
     
         # Call the filler
         solution_state = self.layer_filler.fill_layer(
-            layer_area_template, 
-            placement, 
+            layer, 
+            ldp, 
             self.warehouse
         )
         
@@ -49,19 +48,8 @@ class ContainerState:
             
         return None
     
-    def add_layer(self, layer):
-        new_container = self.container.add_layer(layer)
-        new_warehouse = Warehouse()
-        for placement in layer.get_placements():
-            new_warehouse = new_warehouse.delete_piece(placement.get_piece())
-
-        return ContainerState(
-            new_container, 
-            new_warehouse, 
-            s_depth=self.layer_filler.s_depth, 
-            s_width=self.layer_filler.s_width
-        )
-    
+    # Check if the layer physically fits the container and the warehouse 
+    # has enough stock for its pieces.
     def can_add_layer(self, layer):
         layer_warehouse = Warehouse.warehouse_from_placements(layer.get_placements())
 

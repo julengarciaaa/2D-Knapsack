@@ -38,6 +38,7 @@ class LayerState:
     def get_p_points(self):
         return self.p_points
 
+    # Commits a placement and calculates the new placing points.
     def commit_placement(self, placement):
         x, y = placement.get_p_point()
         p_l, p_w = placement.get_length(), placement.get_width()
@@ -46,7 +47,7 @@ class LayerState:
         new_v_edges = self.vertical_edges.copy()
         new_h_edges = self.horizontal_edges.copy()
 
-        # Calculate the new placing poinys
+        # Calculate the new placing points
         active_points = [p for p in self.p_points if p != (x, y)]
         
         p1, p2 = (x, y + p_w), (x + p_l, y)
@@ -77,8 +78,8 @@ class LayerState:
             vertical_edges=new_v_edges,
             horizontal_edges=new_h_edges
         )
-
-    def get_tp(self, placement):
+    
+    def get_touching_parameter(self, placement):
         x, y = placement.get_p_point()
         p_w, p_l = placement.get_width(), placement.get_length()
         tp = 0

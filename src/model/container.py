@@ -33,7 +33,7 @@ class Container:
     def get_filling_rate(self):
         area = self.get_area()
         if area == 0: return 0
-        return self.get_packed_value() / area
+        return self.get_covered_area() / area
     
     def get_packed_value(self):
         packed_value = 0
@@ -42,14 +42,14 @@ class Container:
 
         return packed_value
     
-    def is_feasible_ldp(self, placement):
-        p_length = placement.get_length()
-        p_width = placement.get_width()
+    def is_feasible_ldp(self, ldp):
+        p_length = ldp.get_length()
+        p_width = ldp.get_width()
 
         available_length = self.length - self.current_length
         return p_length <= available_length and p_width <= self.width
     
-    def can_add_layer(self, layer):
+    def is_feasible_layer(self, layer):
         length = layer.get_length()
 
         available_length = self.length - self.current_length

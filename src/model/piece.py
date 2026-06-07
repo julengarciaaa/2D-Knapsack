@@ -3,10 +3,10 @@ import copy
 class Piece:
     __slots__ = ['length', 'width', 'packed_value']
 
-    def __init__(self, length, width, packed_value=None):
+    def __init__(self, length, width, packed_value):
         self.length = length
         self.width = width
-        self.packed_value = packed_value if packed_value is not None else length * width
+        self.packed_value = packed_value
     
     def get_length(self):
         return self.length
@@ -14,11 +14,11 @@ class Piece:
     def get_width(self):
         return self.width
     
-    def get_packed_value(self):
-        return self.packed_value
-        
     def get_area(self):
         return self.length * self.width
+    
+    def get_packed_value(self):
+        return self.packed_value
     
     def clone(self):
         return copy.copy(self)
