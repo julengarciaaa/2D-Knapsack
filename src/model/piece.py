@@ -1,7 +1,7 @@
 import copy
 
 class Piece:
-    __slots__ = ['length', 'width', 'packed_value']
+    __slots__ = ["length", "width", "packed_value"]
 
     def __init__(self, length, width, packed_value):
         self.length = length

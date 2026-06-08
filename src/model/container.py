@@ -41,7 +41,6 @@ class Container:
             packed_value += layer.get_packed_value()
 
         return packed_value
-
     
     def is_feasible_ldp(self, ldp):
         p_length = ldp.get_length()

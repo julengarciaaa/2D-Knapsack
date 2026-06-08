@@ -2,7 +2,7 @@ import copy
 from src.model.piece import Piece
 
 class Placement:
-    __slots__ = ['piece', 'p_point', '_is_rotated']
+    __slots__ = ["piece", "p_point", "_is_rotated"]
 
     def __init__(self, piece, is_rotated, p_point):
         self.piece = piece
