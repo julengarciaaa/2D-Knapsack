@@ -50,33 +50,13 @@ class SolverRTS:
         self.toolbox.register("select", tools.selBest)
 
     def evaluate(self, individual):
-        # The filling rate is the starting point for calculating the fitness
-        filling_rate = individual.container.get_filling_rate()
-        
-        # Total area for future normalization
-        total_area = individual.container.get_length() * individual.container.get_width()
-        max_penalty = 0
-        penalty = 0
+        filling_rate = individual.get_filling_rate()
+        packed_value_rate = individual.get_packed_value_rate()
+        penalty_rate = individual.get_penalty_rate()
 
-        for piece, (min_demand, max_demand) in individual.warehouse.original_inventory.items():
-            max_penalty += min_demand * piece.get_area()
-        
-        # Iterate through the warehouse to see the left pieces
-        for piece, (min_demand, max_demand) in individual.warehouse.inventory.items():
-            penalty += min_demand * piece.get_area()
-
-        fitness = self.alpha * filling_rate - self.beta * (penalty / max_penalty)
+        fitness = (filling_rate + packed_value_rate - penalty_rate + 1) / 3
 
         return (fitness,)
-    
-    def get_filling_rate(self):
-        return None
-    
-    def get_packed_value_rate(self):
-        return None
-    
-    def get_penalty_rate(self):
-        return None
 
     def generate_initial_population(self, n_pop, container, warehouse):
         population = []

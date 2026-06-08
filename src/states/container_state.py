@@ -16,6 +16,15 @@ class ContainerState:
     
     def get_warehouse(self):
         return self.warehouse
+    
+    def get_filling_rate(self):
+        return self.container.get_filling_rate()
+    
+    def get_packed_value_rate(self):
+        return self.container.get_packed_value_rate()
+    
+    def get_penalty_rate(self):
+        return self.warehouse.get_penalty_rate()
 
     def fill_layer(self, ldp):
         # Check if the piece fits in the remaining container length
@@ -53,12 +62,14 @@ class ContainerState:
     def can_add_layer(self, layer):
         layer_warehouse = Warehouse.warehouse_from_placements(layer.get_placements())
 
-        return self.container.can_add_layer(layer) and self.warehouse.contains(layer_warehouse)
+        return self.container.can_add_layer(layer) and self.warehouse.can_fulfill(layer_warehouse)
         
     def __eq__(self, other):
         if not isinstance(other, ContainerState):
             return False
-        return self._cached_hash == other._cached_hash
+        if self._cached_hash != other._cached_hash:
+            return False
+        return self.container == other.container and self.warehouse == other.warehouse
     
     def __hash__(self):
         return self._cached_hash
