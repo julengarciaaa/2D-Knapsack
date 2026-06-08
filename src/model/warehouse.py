@@ -90,6 +90,9 @@ class Warehouse:
     
     def get_mandatory_demand_area(self):
         return self._mandatory_demand_area
+    
+    def get_penalty_rate(self):
+        return self._unfulfilled_demand_area / self._mandatory_demand_area
 
     def delete_piece(self, piece):
         if piece not in self.inventory:

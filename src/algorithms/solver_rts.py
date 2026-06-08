@@ -68,6 +68,15 @@ class SolverRTS:
         fitness = self.alpha * filling_rate - self.beta * (penalty / max_penalty)
 
         return (fitness,)
+    
+    def get_filling_rate(self):
+        return None
+    
+    def get_packed_value_rate(self):
+        return None
+    
+    def get_penalty_rate(self):
+        return None
 
     def generate_initial_population(self, n_pop, container, warehouse):
         population = []
