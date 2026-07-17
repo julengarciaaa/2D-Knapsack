@@ -91,6 +91,27 @@ class LayerState:
         tp += self._measure(P.closedopen(y, y + p_w) & self.vertical_edges[x + p_l])
         
         return tp
+    
+    def get_filling_rate(self):
+        return self.layer.get_filling_rate()
+    
+    def get_packed_value_rate(self):
+        real_packed_value = self.get_layer().get_packed_value()
+        max_packed_value = self.get_layer().get_length() * self.get_layer().get_width() * self.get_warehouse().get_max_packed_value_density()
+
+        return real_packed_value / max_packed_value
+    
+    def get_penalty_rate(self):
+        return self.warehouse.get_penalty_rate()
+    
+    def get_fitness_value(self):
+        filling_rate = self.get_filling_rate()
+        packed_value_rate = self.get_packed_value_rate()
+        penalty_rate = self.get_penalty_rate()
+
+        fitness = (filling_rate + packed_value_rate - penalty_rate + 1) / 3
+
+        return fitness
 
     def _measure(self, interval):
         return sum(i.upper - i.lower for i in interval) if not interval.empty else 0
