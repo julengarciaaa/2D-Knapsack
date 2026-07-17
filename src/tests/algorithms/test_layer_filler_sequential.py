@@ -3,7 +3,7 @@ from src.model.piece import Piece
 from src.model.placement import Placement
 from src.model.warehouse import Warehouse
 from src.states.layer_state import LayerState
-from src.algorithms.layer_filler_rts import LayerFillerRTS
+from src.algorithms.layer_filler_sequential import LayerFillerSequential
 from src.visuals.state_visuals import plot_layer_state
 from src.utils.data_loader import load_warehouse_from_json, load_layer_from_json
 import numpy as np
@@ -46,7 +46,7 @@ def main():
     ldp = select_random_ldp(layer, warehouse)
 
     # Proceed with the filler
-    filler = LayerFillerRTS(s_depth=3, s_width=2)
+    filler = LayerFillerSequential()
     best_state = filler.fill_layer(layer, ldp, warehouse)
 
     # Result Visualization

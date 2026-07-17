@@ -10,12 +10,12 @@ class LayerFillerSequential:
         s = LayerState(layer, warehouse)
         s = s.commit_placement(ldp)
 
-        possible_placements = self.get_possible_placements()
+        possible_placements = self.get_possible_placements(s)
         while possible_placements != []:
             next_placement = self.select_random_placement(possible_placements)
             s = s.commit_placement(next_placement)
 
-            possible_placements = self.get_possible_placements()
+            possible_placements = self.get_possible_placements(s)
 
         return s
 
