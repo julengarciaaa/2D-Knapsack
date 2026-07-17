@@ -2,6 +2,7 @@ import json
 from src.model.piece import Piece
 from src.model.warehouse import Warehouse
 from src.model.container import Container
+from src.model.layer import Layer
 
 def load_warehouse_from_json(file_path):
     with open(file_path, 'r', encoding='utf-8') as f:
@@ -24,14 +25,14 @@ def load_warehouse_from_json(file_path):
         
         # If the maximum demand is null, the maximum demand is the same as the minimum demand
         if max_qty is None:
-            max_qty = min_qty
+            max_qty = float('inf')
             
         # If the piece already exists, update the inventory
         if p in inventory:
-            prev_min, prev_max = inventory[p]
-            inventory[p] = (prev_min + min_qty, prev_max + max_qty)
+            prev_min, _, prev_max = inventory[p]
+            inventory[p] = (prev_min + min_qty, 0, prev_max + max_qty)
         else:
-            inventory[p] = (min_qty, max_qty)
+            inventory[p] = (min_qty, 0, max_qty)
             
     return Warehouse(inventory)
 
@@ -44,3 +45,13 @@ def load_container_from_json(file_path):
 
 
     return Container(length, width)
+
+def load_layer_from_json(file_path):
+    with open(file_path, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+
+    length = data["Objects"][0].get("Length")
+    width = data["Objects"][0].get("Height")
+
+
+    return Layer(length, width)

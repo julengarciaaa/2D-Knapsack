@@ -33,25 +33,10 @@ class LayerFillerRTS:
         while s_set:
             s = s_set.pop()
             # Generate candidates
-            candidate_successors = []
-            free_pieces = s.get_warehouse().get_pieces()
-            p_points = s.get_p_points()
-
-            for p in free_pieces:
-                is_square = (p.length == p.width)
-                for p_point in p_points:
-                    # Try both orientations
-                    orientations = [False] if is_square else [False, True]
-                    
-                    for rot in orientations:
-                        pl = Placement(p, rot, p_point)
-
-                        if s.layer.is_feasible(pl):
-                            # Touching Perimeter (TP) is our heuristic
-                            candidate_successors.append((pl, s.get_tp(pl)))
+            possible_placements = self.get_possible_placements(s)
 
             # Continue searching or save best result
-            if not candidate_successors:
+            if not possible_placements:
                 current_value = s.layer.get_filling_rate()
                 if current_value > s_best_vp:
                     s_best_vp = current_value
@@ -61,7 +46,7 @@ class LayerFillerRTS:
                 n_succ = self.s_width if s.layer.get_num_placements() <= self.s_depth else 1
                 
                 # Take the best n_succ (highest TP)
-                best_candidates = self.choose_random_candidates(candidate_successors, n_succ)
+                best_candidates = self.choose_random_candidates(possible_placements, n_succ)
                 
                 for pl in best_candidates:
                     s_next = s.commit_placement(pl)
@@ -71,3 +56,24 @@ class LayerFillerRTS:
                         s_set.append(s_next)
 
         return s_best
+
+    def get_possible_placements(self, layer_state):
+        pieces = layer_state.get_warehouse().get_pieces()
+        p_points = layer_state.get_p_points()
+        layer = layer_state.get_layer()
+
+        possible_placements = []
+        for piece in pieces:
+            is_square = (piece.length == piece.width)
+            for p_point in p_points:
+                    # Try both orientations
+                    orientations = [False] if is_square else [False, True]
+                    
+                    for rot in orientations:
+                        pl = Placement(piece, rot, p_point)
+
+                        if layer.is_feasible(pl):
+                            # Touching Perimeter (TP) is our heuristic
+                            possible_placements.append((pl, layer_state.get_tp(pl)))
+            
+        return possible_placements

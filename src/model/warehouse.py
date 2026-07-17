@@ -1,12 +1,13 @@
 from src.model.piece import Piece
+from src.model.placement import Placement
 import copy
 
 class Warehouse:
     __slots__ = ["original_inventory", "inventory", "_max_packed_value_density", "_unfulfilled_demand_area", "_mandatory_demand_area","_cached_hash"]
 
-    def __init__(self, inventory, original_inventory, max_packed_value_density=None, unfulfilled_demand_area=None, mandatory_demand_area=None):
+    def __init__(self, inventory, original_inventory=None, max_packed_value_density=None, unfulfilled_demand_area=None, mandatory_demand_area=None):
         self.inventory = inventory.copy() 
-        self.original_inventory = original_inventory.copy()
+        self.original_inventory = inventory.copy() if original_inventory is None else original_inventory.copy()
         self._max_packed_value_density = self._get_max_packed_value_density() if max_packed_value_density is None else max_packed_value_density
         self._unfulfilled_demand_area = self._get_unfulfilled_demand_area() if unfulfilled_demand_area is None else unfulfilled_demand_area
         self._mandatory_demand_area = self._get_mandatory_demand_area() if mandatory_demand_area is None else mandatory_demand_area
