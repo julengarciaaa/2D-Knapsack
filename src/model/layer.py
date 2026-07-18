@@ -2,12 +2,15 @@ import copy
 from src.model.placement import Placement
 
 class Layer:
-    __slots__ = ['length', 'width', 'placements']
+    __slots__ = ["length", "width", "placements", "_cached_hash"]
 
     def __init__(self, length, width, placements=None):
         self.length = length
         self.width = width
         self.placements = tuple(placements) if placements is not None else ()
+
+        # Cache the hash because the state never changes
+        self._cached_hash = hash((self.length, self.width, frozenset(self.placements)))
 
     def get_length(self):
         return self.length
@@ -97,7 +100,7 @@ class Layer:
     
     def __hash__(self):
         # Immutability makes hashing very fast and reliable
-        return hash((self.length, self.width, self.placements))
+        return self._cached_hash
 
     def __repr__(self):
         return f"Layer({self.length}x{self.width}, Items: {len(self.placements)})"
