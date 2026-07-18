@@ -79,7 +79,7 @@ class LayerState:
             horizontal_edges=new_h_edges
         )
     
-    def get_touching_parameter(self, placement):
+    def get_tp(self, placement):
         x, y = placement.get_p_point()
         p_w, p_l = placement.get_width(), placement.get_length()
         tp = 0
