@@ -2,13 +2,15 @@ import copy
 from src.model.piece import Piece
 
 class Placement:
-    __slots__ = ["piece", "p_point", "_is_rotated"]
+    __slots__ = ["piece", "p_point", "_is_rotated", "_cached_hash"]
 
     def __init__(self, piece, is_rotated, p_point):
         self.piece = piece
         self._is_rotated = is_rotated
         self.p_point = p_point
 
+        # Cache the hash because the state never changes
+        self._cached_hash = hash((self.piece, self._is_rotated, self.p_point))
     def get_piece(self):
         return self.piece
     
@@ -43,8 +45,6 @@ class Placement:
         is_rotated = d["is_rotated"]
         return Placement(piece, is_rotated, p_point)
 
-
-
     def __eq__(self, other):
         if not isinstance(other, Placement):
             return False
@@ -54,7 +54,7 @@ class Placement:
                 self.p_point == other.p_point)
 
     def __hash__(self):
-        return hash((self.piece, self._is_rotated, self.p_point))
+        return self._cached_hash
 
     def __repr__(self):
         rot = "Rotated" if self._is_rotated else "Normal"

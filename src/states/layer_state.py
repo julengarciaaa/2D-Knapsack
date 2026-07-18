@@ -2,11 +2,13 @@ import portion as P
 from collections import defaultdict
 
 class LayerState:
-    __slots__ = ["layer", "warehouse"]
+    __slots__ = ["layer", "warehouse", "_cached_hash"]
 
     def __init__(self, layer, warehouse):
         self.layer = layer
         self.warehouse = warehouse
+
+        self._cached_hash = hash((layer, warehouse))
 
     def get_layer(self):
         return self.layer
@@ -58,3 +60,6 @@ class LayerState:
         if not isinstance(other, LayerState): return False
         return (self.warehouse == other.warehouse and 
                 self.layer == other.layer)
+    
+    def __hash__(self):
+        return self._cached_hash

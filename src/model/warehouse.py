@@ -11,6 +11,8 @@ class Warehouse:
         self._max_packed_value_density = self._get_max_packed_value_density() if max_packed_value_density is None else max_packed_value_density
         self._unfulfilled_demand_area = self._get_unfulfilled_demand_area() if unfulfilled_demand_area is None else unfulfilled_demand_area
         self._mandatory_demand_area = self._get_mandatory_demand_area() if mandatory_demand_area is None else mandatory_demand_area
+        
+        # Cache the hash because the state never changes
         self._cached_hash = hash(frozenset(self.inventory.items()))
 
     def get_pieces(self):
