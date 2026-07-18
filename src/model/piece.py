@@ -1,12 +1,16 @@
 import copy
 
 class Piece:
-    __slots__ = ['length', 'width', 'packed_value']
+    __slots__ = ["length", "width", "packed_value", "_cached_hash"]
 
     def __init__(self, length, width, packed_value):
         self.length = length
         self.width = width
         self.packed_value = packed_value
+
+        # Cache the hash because the state never changes
+        dimensions = (min(self.length, self.width), max(self.length, self.width))
+        self._cached_hash = hash((dimensions, self.packed_value))
     
     def get_length(self):
         return self.length
@@ -49,8 +53,7 @@ class Piece:
                 self.packed_value == other.packed_value)
     
     def __hash__(self):
-        dimensions = (min(self.length, self.width), max(self.length, self.width))
-        return hash((dimensions, self.packed_value))
+        return self._cached_hash
 
     def __repr__(self):
         return f"Piece({self.length}x{self.width})"
