@@ -1,38 +1,25 @@
 import copy
+import numpy as np
 from collections import defaultdict
 import portion as P
 from src.model.placement import Placement
 
 class Layer:
-    __slots__ = ["length", "width", "placements", "p_points", "vertical_edges", "horizontal_edges", "_covered_area", "_packed_value", "_cached_hash"]
+    __slots__ = ["length", "width", "placements", "p_points", "_grid", "_covered_area", "_packed_value", "_cached_hash"]
 
-    def __init__(self, length, width, placements=None, p_points=None, vertical_edges=None, horizontal_edges=None, covered_area=0, packed_value=0):
+    def __init__(self, length, width, placements=None, grid=None, p_points=None, covered_area=0, packed_value=0):
         self.length = length
         self.width = width
         self.placements = placements if placements is not None else ()
+        self._grid = grid if grid is not None else np.zeros((length, width), dtype=bool)
         self._covered_area = covered_area
         self._packed_value = packed_value
 
         # Store as tuple to ensure immutability
         self.p_points = p_points if p_points is not None else ((0, 0),)
-
-        # Initialize or copy edge dictionaries
-        if vertical_edges is None:
-            self.vertical_edges = defaultdict(lambda: P.empty())
-            self.vertical_edges[0] = P.closedopen(0, self.width)
-            self.vertical_edges[self.length] = P.closedopen(0, self.width)
-        else:
-            self.vertical_edges = vertical_edges
-
-        if horizontal_edges is None:
-            self.horizontal_edges = defaultdict(lambda: P.empty())
-            self.horizontal_edges[0] = P.closedopen(0, self.length)
-            self.horizontal_edges[self.width] = P.closedopen(0, self.length)
-        else:
-            self.horizontal_edges = horizontal_edges
         
         # Cache the hash because the state never changes
-        self._cached_hash = hash(frozenset(self.get_placements()))
+        self._cached_hash = hash((self.length, self.width, frozenset(self.placements)))
 
     def get_length(self):
         return self.length
@@ -68,50 +55,39 @@ class Layer:
     
     def commit_placement(self, placement):
         piece = placement.get_piece()
+        x, y = placement.get_p_point()
+        p_l, p_w = placement.get_length(), placement.get_width()
+
         # Update the placements
         new_placements = self.placements + (placement,)
+        new_grid = self._grid.copy()
+        new_grid[x : x + p_l, y : y + p_w] = True
         # Update the covered area
         new_covered_area = self._covered_area + piece.get_area()
         # Update the packed value
         new_packed_value = self._packed_value + piece.get_packed_value()
-
-        x, y = placement.get_p_point()
-        p_l, p_w = placement.get_length(), placement.get_width()
-
-        # Update edges (creating fresh copies for the new state)
-        new_v_edges = self.vertical_edges.copy()
-        new_h_edges = self.horizontal_edges.copy()
 
         # Calculate the new placing points
         active_points = [p for p in self.p_points if p != (x, y)]
         
         p1, p2 = (x, y + p_w), (x + p_l, y)
         # Check the existance of supports
-        p1_has_v_support = p1[1] in new_v_edges[p1[0]]
-        p2_has_v_support = p2[1] in new_v_edges[p2[0]]
-        p1_has_h_support = p1[0] in new_h_edges[p1[1]]
-        p2_has_h_support = p2[0] in new_h_edges[p2[1]]
+        p1_has_v_support = p1[0] == 0 or (p1[1] < self.width and self._grid[p1[0] - 1, p1[1]])
+        p2_has_h_support = p2[1] == 0 or (p2[0] < self.length and self._grid[p2[0], p2[1] - 1])
 
         # Check the conditions for being a rear left placement point
-        if p1_has_v_support and not p1_has_h_support and p1 not in active_points:
+        if p1_has_v_support and p1 not in active_points:
             active_points.append(p1)
 
         # Check the conditions for being a front right placement point
-        if p2_has_h_support and not p2_has_v_support and p2 not in active_points:
+        if p2_has_h_support and p2 not in active_points:
             active_points.append(p2)
-
-
-        new_v_edges[x] |= P.closedopen(y, y + p_w)
-        new_v_edges[x + p_l] |= P.closedopen(y, y + p_w)
-        new_h_edges[y] |= P.closedopen(x, x + p_l)
-        new_h_edges[y + p_w] |= P.closedopen(x, x + p_l)
         
         return Layer(self.length, 
             self.width, 
             placements=new_placements, 
+            grid=new_grid,
             p_points=tuple(active_points),
-            vertical_edges=new_v_edges,
-            horizontal_edges=new_h_edges,
             covered_area=new_covered_area, 
             packed_value=new_packed_value
         )
@@ -121,16 +97,31 @@ class Layer:
         p_w, p_l = placement.get_width(), placement.get_length()
         tp = 0
 
-        # Calculate interval intersections
-        tp += self._measure(P.closedopen(x, x + p_l) & self.horizontal_edges[y])
-        tp += self._measure(P.closedopen(y, y + p_w) & self.vertical_edges[x])
-        tp += self._measure(P.closedopen(x, x + p_l) & self.horizontal_edges[y + p_w])
-        tp += self._measure(P.closedopen(y, y + p_w) & self.vertical_edges[x + p_l])
+        # Left side (x - 1)
+        if x == 0:
+            tp += p_w  # Touches the left container wall
+        else:
+            tp += np.sum(self._grid[x - 1, y : y + p_w])
+
+        # Bottom side (y - 1)
+        if y == 0:
+            tp += p_l  # Touches the container floor
+        else:
+            tp += np.sum(self._grid[x : x + p_l, y - 1])
+
+        # Right side (x + p_l)
+        if x + p_l == self.length:
+            tp += p_w  # Touches the right container wall
+        else:
+            tp += np.sum(self._grid[x + p_l, y : y + p_w])
+
+        # Top side (y + p_w)
+        if y + p_w == self.width:
+            tp += p_l  # Touches the container ceiling
+        else:
+            tp += np.sum(self._grid[x : x + p_l, y + p_w])
         
         return tp
-    
-    def _measure(self, interval):
-        return sum(i.upper - i.lower for i in interval) if not interval.empty else 0
 
     def is_feasible(self, placement):
         x, y = placement.get_p_point()
@@ -142,18 +133,7 @@ class Layer:
             return False
 
         # Overlap check against existing placements
-        for pl in self.placements:
-            px, py = pl.get_p_point()
-            pp_l, pp_w = pl.get_length(), pl.get_width()
-
-            # Collision detected if all 4 conditions are true
-            if (x < px + pp_l and
-                x + p_l > px and
-                y < py + pp_w and
-                y + p_w > py):
-                return False 
-
-        return True
+        return not np.any(self._grid[x : x + p_l, y : y + p_w])
     
     @staticmethod
     def layer_to_dict(layer):
@@ -185,7 +165,7 @@ class Layer:
                 set(self.placements) == set(other.placements))
     
     def __hash__(self):
-        return hash((self.length, self.width, self.placements))
+        return self._cached_hash
 
     def __repr__(self):
         return f"Layer({self.length}x{self.width}, Items: {len(self.placements)})"
