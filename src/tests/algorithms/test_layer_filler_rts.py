@@ -71,7 +71,7 @@ def main():
     std_dev = statistics.stdev(run_times)
 
     # Save statistics in a CSV file
-    csv_filename = "layer_filler_rts_time_statistics.csv"
+    csv_filename = "src/tests/algorithms/results/layer_filler_rts_time_statistics.csv"
     file_exists = os.path.isfile(csv_filename)
 
     headers = ["Evaluated instance", "Total runs", "Mean time", "Standard Deviation"]
