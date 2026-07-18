@@ -27,7 +27,7 @@ class LayerFillerRTS:
         s_set = [s_1]
         visited = {s_1}
 
-        s_best_vp = 0
+        s_best_fitness = 0
         s_best = s_1
 
         while s_set:
@@ -37,9 +37,9 @@ class LayerFillerRTS:
 
             # Continue searching or save best result
             if not possible_placements:
-                current_value = s.layer.get_filling_rate()
-                if current_value > s_best_vp:
-                    s_best_vp = current_value
+                current_value = s.get_fitness_value()
+                if current_value > s_best_fitness:
+                    s_best_fitness = current_value
                     s_best = s
             else:
                 # Beam width logic

@@ -11,7 +11,7 @@ class LayerFillerSequential:
         s = s.commit_placement(ldp)
 
         possible_placements = self.get_possible_placements(s)
-        while possible_placements != []:
+        while possible_placements:
             next_placement = self.select_random_placement(possible_placements)
             s = s.commit_placement(next_placement)
 
@@ -22,7 +22,16 @@ class LayerFillerSequential:
         
     def select_random_placement(self, possible_placements):
         weights = np.array([t[1] for t in possible_placements])
-        probabilities = weights / weights.sum()
+        total_weight = weights.sum()
+
+        # Avoid division by zero.
+        if total_weight == 0:
+            probabilities = np.ones(len(possible_placements)) / len(possible_placements)
+        else:
+            probabilities = weights / total_weight
+
+        # Normalise the vector to avoid floating point issues.
+        probabilities /= probabilities.sum()
 
         index = np.random.choice(len(possible_placements), size=1, replace=False, p=probabilities)[0]
 

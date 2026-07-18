@@ -8,6 +8,7 @@ class LayerState:
         self.layer = layer
         self.warehouse = warehouse
 
+        # Cache the hash because the state never changes
         self._cached_hash = hash((layer, warehouse))
 
     def get_layer(self):
