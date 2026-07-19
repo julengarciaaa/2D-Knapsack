@@ -2,7 +2,7 @@ import copy
 from src.model.placement import Placement
 
 class Layer:
-    __slots__ = ["length", "width", "placements", "_covered_area", "_packed_value"]
+    __slots__ = ["length", "width", "placements", "_covered_area", "_packed_value", "_cached_hash"]
 
     def __init__(self, length, width, placements=None, covered_area=0, packed_value=0):
         self.length = length
@@ -10,6 +10,9 @@ class Layer:
         self.placements = tuple(placements) if placements is not None else ()
         self._covered_area = covered_area
         self._packed_value = packed_value
+
+        # Cache the hash because the state never changes
+        self._cached_hash = hash((self.length, self.width, frozenset(self.placements)))
 
     def get_length(self):
         return self.length
@@ -106,10 +109,10 @@ class Layer:
         # Since placements is a tuple, we can compare directly
         return (self.length == other.length and 
                 self.width == other.width and 
-                self.placements == other.placements)
+                set(self.placements) == set(other.placements))
     
     def __hash__(self):
-        return hash((self.length, self.width, self.placements))
+        return self._cached_hash
 
     def __repr__(self):
         return f"Layer({self.length}x{self.width}, Items: {len(self.placements)})"

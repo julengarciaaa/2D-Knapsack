@@ -118,7 +118,8 @@ class LayerState:
 
     def __eq__(self, other):
         if not isinstance(other, LayerState): return False
-        return self._cached_hash == other._cached_hash
+        return (self.warehouse == other.warehouse and 
+                self.layer == other.layer)
 
     def __hash__(self):
         return self._cached_hash
