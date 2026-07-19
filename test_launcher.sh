@@ -10,4 +10,4 @@ export PYTHONPATH=.
 VENV_PYTHON=$(which python)
 
 # 3. Lanzamos srun usando esa ruta absoluta
-srun -p compute -w m09-14 --ntasks=1 --cpus-per-task=1 --mem=2G $VENV_PYTHON -m src.tests.algorithms.test_layer_filler_rts
+srun -p compute -w m08-19 --ntasks=1 --cpus-per-task=1 --mem=2G $VENV_PYTHON -m src.tests.algorithms.test_layer_filler_rts
