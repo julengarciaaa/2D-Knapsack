@@ -3,10 +3,15 @@ from src.model.piece import Piece
 from src.model.placement import Placement
 from src.model.warehouse import Warehouse
 from src.states.layer_state import LayerState
-from src.algorithms.layer_filler_sequential import LayerFillerSequential
+from src.algorithms.layer_filler_rts import LayerFillerRTS
 from src.visuals.state_visuals import plot_layer_state
 from src.utils.data_loader import load_warehouse_from_json, load_layer_from_json
+
 import numpy as np
+import statistics
+import time
+import csv
+import os
 
 def get_possible_placements(layer, warehouse):
     layer_state = LayerState(layer, warehouse)
@@ -38,22 +43,47 @@ def select_random_ldp(layer, warehouse):
 
 def main():
     # Load the required data
-    data_path = "src/data/set3/JAKOBS/1.json"
+    data_path = "src/data/set1/BEASLEY/1.json"
+    total_runs = 30
     layer = load_layer_from_json(data_path)
     warehouse = load_warehouse_from_json(data_path)
 
-    # Select randomly the layer defining placement (LDP)
-    ldp = select_random_ldp(layer, warehouse)
+    run_times = []
+    for i in range(total_runs):
+        # Select randomly the layer defining placement (LDP)
+        ldp = select_random_ldp(layer, warehouse)
 
-    # Proceed with the filler
-    filler = LayerFillerSequential()
-    best_state = filler.fill_layer(layer, ldp, warehouse)
+        # Proceed with the filler
+        filler = LayerFillerRTS(s_depth=3, s_width=2)
+        # Start the counter
+        start_time = time.perf_counter()
+        # Execute the filler
+        best_state = filler.fill_layer(layer, ldp, warehouse)
+        # Stop the counter 
+        end_time = time.perf_counter()
 
-    # Result Visualization
-    if best_state is not None:
-        plot_layer_state(best_state)
-    else:
-        print("\nSolution not found.")
+        # Calculate the elapsed time
+        elapsed_time = end_time - start_time
+        run_times.append(elapsed_time)
+
+    # Calculate statistics
+    mean_time = statistics.mean(run_times)
+    std_dev = statistics.stdev(run_times)
+
+    # Save statistics in a CSV file
+    csv_filename = "src/tests/algorithms/results/layer_filler_rts_time_statistics.csv"
+    file_exists = os.path.isfile(csv_filename)
+
+    headers = ["Evaluated instance", "Total runs", "Mean time", "Standard Deviation"]
+
+    with open(csv_filename, mode="a", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+
+        if not file_exists:
+            writer.writerow(headers)
+
+        writer.writerow([data_path, total_runs, mean_time, std_dev])
+
 
 if __name__ == "__main__":
     main()
